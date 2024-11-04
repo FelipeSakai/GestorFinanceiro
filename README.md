@@ -27,4 +27,8 @@ Este projeto é destinado a:
 - **Pequenos empreendedores** que desejam acompanhar suas receitas e despesas de forma básica.
 
 
+![Diagrama em branco](https://github.com/user-attachments/assets/1fc65b20-cbf1-4cb9-8fab-e9834ca499fd)
+
+
+
 
