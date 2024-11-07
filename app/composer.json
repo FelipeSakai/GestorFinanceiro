@@ -1,8 +1,8 @@
 {
-    "name": "suporte-om/gestor-financeiro",
+    "name": "suporte-om/app",
     "autoload": {
         "psr-4": {
-            "SuporteOm\\GestorFinanceiro\\": "src/"
+            "SuporteOm\\App\\": "src/"
         }
     },
     "authors": [
