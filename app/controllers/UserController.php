@@ -2,15 +2,12 @@
 
 namespace App\Controllers;
 
-use App\Models\Database;
-use PDO;
+use App\Models\User;
 
 class UserController
 {
-
     public function createUser()
     {
-        $db = Database::getConnection();
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (!isset($data['username'], $data['email'], $data['password'])) {
@@ -19,16 +16,12 @@ class UserController
             return;
         }
 
-        try {
-            $stmt = $db->prepare("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)");
-            $stmt->bindParam(':username', $data['username']);
-            $stmt->bindParam(':email', $data['email']);
-            $stmt->bindValue(':password', password_hash($data['password'], PASSWORD_BCRYPT));
-            $stmt->execute();
+        $user = new User($data['username'], $data['email'], $data['password']);
 
+        if ($user->save()) {
             echo json_encode(['message' => 'Usuário criado com sucesso']);
             http_response_code(201);
-        } catch (\Exception $e) {
+        } else {
             echo json_encode(['message' => 'Erro ao criar usuário']);
             http_response_code(500);
         }
@@ -36,12 +29,8 @@ class UserController
 
     public function getAll()
     {
-        $db = Database::getConnection();
-
         try {
-            $stmt = $db->query("SELECT id, username, email, created_at FROM users");
-            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+            $users = User::getAll();
             echo json_encode($users);
             http_response_code(200);
         } catch (\Exception $e) {
@@ -52,31 +41,19 @@ class UserController
 
     public function getUserById($id)
     {
-        $db = Database::getConnection();
+        $user = User::find($id);
 
-        try {
-            $stmt = $db->prepare("SELECT id, username, email, created_at FROM users WHERE id = :id");
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user) {
-                echo json_encode($user);
-                http_response_code(200);
-            } else {
-                echo json_encode(['message' => 'Usuário não encontrado']);
-                http_response_code(404);
-            }
-        } catch (\Exception $e) {
-            echo json_encode(['message' => 'Erro ao buscar usuário']);
-            http_response_code(500);
+        if ($user) {
+            echo json_encode($user);
+            http_response_code(200);
+        } else {
+            echo json_encode(['message' => 'Usuário não encontrado']);
+            http_response_code(404);
         }
     }
 
     public function updateUser($id)
     {
-        $db = Database::getConnection();
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (!isset($data['username'], $data['email'])) {
@@ -85,36 +62,32 @@ class UserController
             return;
         }
 
-        try {
-            $stmt = $db->prepare("UPDATE users SET username = :username, email = :email WHERE id = :id");
-            $stmt->bindParam(':username', $data['username']);
-            $stmt->bindParam(':email', $data['email']);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
+        $user = User::find($id);
+        if ($user) {
+            $user->username = $data['username'];
+            $user->email = $data['email'];
 
-            echo json_encode(['message' => 'Usuário atualizado com sucesso']);
-            http_response_code(200);
-        } catch (\Exception $e) {
-            echo json_encode(['message' => 'Erro ao atualizar usuário']);
-            http_response_code(500);
+            if ($user->save()) {
+                echo json_encode(['message' => 'Usuário atualizado com sucesso']);
+                http_response_code(200);
+            } else {
+                echo json_encode(['message' => 'Erro ao atualizar usuário']);
+                http_response_code(500);
+            }
+        } else {
+            echo json_encode(['message' => 'Usuário não encontrado']);
+            http_response_code(404);
         }
     }
 
     public function deleteUser($id)
     {
-        $db = Database::getConnection();
-
-        try {
-            $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-
+        if (User::delete($id)) {
             echo json_encode(['message' => 'Usuário deletado com sucesso']);
             http_response_code(200);
-        } catch (\Exception $e) {
+        } else {
             echo json_encode(['message' => 'Erro ao deletar usuário']);
             http_response_code(500);
         }
     }
 }
-?>

@@ -7,15 +7,15 @@ use PDO;
 class User
 {
     public $id;
-    public $nome;
+    public $username;
     public $email;
-    public $senha;
+    public $password;
 
-    public function __construct($nome = null, $email = null, $senha = null)
+    public function __construct($username = null, $email = null, $password = null)
     {
-        $this->nome = $nome;
+        $this->username = $username;
         $this->email = $email;
-        $this->senha = $senha ? password_hash($senha, PASSWORD_BCRYPT) : null;
+        $this->password = $password ? password_hash($password, PASSWORD_BCRYPT) : null;
     }
 
     public function save()
@@ -23,15 +23,15 @@ class User
         $db = Database::getConnection();
 
         if ($this->id) {
-            $stmt = $db->prepare("UPDATE users SET nome = :nome, email = :email, senha = :senha WHERE id = :id");
+            $stmt = $db->prepare("UPDATE users SET username = :username, email = :email, password = :password WHERE id = :id");
             $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
         } else {
-            $stmt = $db->prepare("INSERT INTO users (nome, email, senha) VALUES (:nome, :email, :senha)");
+            $stmt = $db->prepare("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)");
         }
 
-        $stmt->bindParam(':nome', $this->nome);
+        $stmt->bindParam(':username', $this->username);
         $stmt->bindParam(':email', $this->email);
-        $stmt->bindParam(':senha', $this->senha);
+        $stmt->bindParam(':password', $this->password);
 
         return $stmt->execute();
     }
@@ -39,26 +39,17 @@ class User
     public static function getAll()
     {
         $db = Database::getConnection();
-        $stmt = $db->query("SELECT * FROM users");
-        return $stmt->fetchAll();
+        $stmt = $db->query("SELECT id, username, email, created_at FROM users");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function find($id)
     {
         $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT * FROM users WHERE id = :id");
+        $stmt = $db->prepare("SELECT id, username, email, created_at FROM users WHERE id = :id");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetch();
-    }
-
-    public static function findByEmail($email)
-    {
-        $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT * FROM users WHERE email = :email");
-        $stmt->bindParam(':email', $email);
-        $stmt->execute();
-        return $stmt->fetch();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public static function delete($id)
@@ -69,5 +60,3 @@ class User
         return $stmt->execute();
     }
 }
-
-?>

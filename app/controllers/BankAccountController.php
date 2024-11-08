@@ -4,58 +4,92 @@ namespace App\Controllers;
 
 use App\Models\BankAccount;
 
-class BankAccountController {
-    public function store() {
-        $data = json_decode(file_get_contents('php://input'), true);
+class BankAccountController
+{
+    public function createBankAccount()
+    {
+        $data = json_decode(file_get_contents("php://input"), true);
 
-        if (empty($data['nome']) || empty($data['saldo'])) {
+        if (!isset($data['nome'], $data['saldo'])) {
+            echo json_encode(['message' => 'Nome da conta e saldo inicial são obrigatórios']);
             http_response_code(400);
-            echo json_encode(["error" => "Nome da conta e saldo inicial são obrigatórios."]);
             return;
         }
 
         $account = new BankAccount($data['nome'], $data['saldo']);
-        $account->save();
-        echo json_encode(["success" => "Conta bancária cadastrada com sucesso."]);
+
+        if ($account->save()) {
+            echo json_encode(['message' => 'Conta bancária criada com sucesso']);
+            http_response_code(201);
+        } else {
+            echo json_encode(['message' => 'Erro ao criar conta bancária']);
+            http_response_code(500);
+        }
     }
 
-    public function index() {
+    public function getAll()
+    {
         $accounts = BankAccount::getAll();
-        echo json_encode($accounts);
+
+        if ($accounts) {
+            echo json_encode($accounts);
+            http_response_code(200);
+        } else {
+            echo json_encode(['message' => 'Erro ao buscar contas bancárias']);
+            http_response_code(500);
+        }
     }
 
-    public function show($id) {
+    public function getBankAccountById($id)
+    {
         $account = BankAccount::find($id);
+
         if ($account) {
             echo json_encode($account);
+            http_response_code(200);
         } else {
+            echo json_encode(['message' => 'Conta bancária não encontrada']);
             http_response_code(404);
-            echo json_encode(["error" => "Conta bancária não encontrada."]);
         }
     }
 
-    public function update($id) {
-        $data = json_decode(file_get_contents('php://input'), true);
+    public function updateBankAccount($id)
+    {
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        if (!isset($data['nome'], $data['saldo'])) {
+            echo json_encode(['message' => 'Nome da conta e saldo são obrigatórios']);
+            http_response_code(400);
+            return;
+        }
+
         $account = BankAccount::find($id);
 
         if ($account) {
-            $account->nome = $data['nome'] ?? $account->nome;
-            $account->saldo = isset($data['saldo']) ? floatval($data['saldo']) : $account->saldo;
-            $account->save();
-            echo json_encode(["success" => "Conta bancária atualizada com sucesso."]);
+            $account = new BankAccount($data['nome'], $data['saldo']);
+            $account->id = $id;
+
+            if ($account->save()) {
+                echo json_encode(['message' => 'Conta bancária atualizada com sucesso']);
+                http_response_code(200);
+            } else {
+                echo json_encode(['message' => 'Erro ao atualizar conta bancária']);
+                http_response_code(500);
+            }
         } else {
+            echo json_encode(['message' => 'Conta bancária não encontrada']);
             http_response_code(404);
-            echo json_encode(["error" => "Conta bancária não encontrada."]);
         }
     }
 
-    public function delete($id) {
+    public function deleteBankAccount($id)
+    {
         if (BankAccount::delete($id)) {
-            echo json_encode(["success" => "Conta bancária deletada com sucesso."]);
+            echo json_encode(['message' => 'Conta bancária deletada com sucesso']);
+            http_response_code(200);
         } else {
-            http_response_code(404);
-            echo json_encode(["error" => "Conta bancária não encontrada."]);
+            echo json_encode(['message' => 'Erro ao deletar conta bancária']);
+            http_response_code(500);
         }
     }
 }
-?>
