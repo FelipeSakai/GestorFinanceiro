@@ -9,7 +9,7 @@ class Database {
 
     public static function getConnection() {
         if (!self::$instance) {
-            self::$instance = new PDO("pgsql:host=localhost;dbname=gestorfinanceiro", "postgres", "unigran");
+            self::$instance = new PDO("mysql:host=localhost;dbname=gestorfinanceiro", "root", "");
             self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         }

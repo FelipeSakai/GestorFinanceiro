@@ -9,7 +9,6 @@ class BankAccountController
     public function createBankAccount()
     {
         $data = json_decode(file_get_contents("php://input"), true);
-
         if (!isset($data['nome'], $data['saldo'])) {
             echo json_encode(['message' => 'Nome da conta e saldo inicial são obrigatórios']);
             http_response_code(400);

@@ -5,10 +5,13 @@ require_once './vendor/autoload.php';
 use App\controllers\UserController;
 use App\controllers\BankAccountController;
 
-$requestUri = $_SERVER['REQUEST_URI'];
+$requestedPath = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+$pathItems = explode("/", $requestedPath);
+
+$requestedPath = "/" . ($pathItems[3] ?? '') . (!empty($pathItems[4]) ? "/" . $pathItems[4] : "");
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 
-switch ($requestUri) {
+switch ($requestedPath) {
    
     case '/users':
         $controller = new UserController();
@@ -20,7 +23,7 @@ switch ($requestUri) {
         }
         break;
 
-    case (preg_match('/\/users\/(\d+)/', $requestUri, $matches) ? true : false): 
+    case (preg_match('/\/users\/(\d+)/', $requestedPath, $matches) ? true : false): 
         $controller = new UserController();
         $userId = $matches[1];
 
@@ -43,7 +46,7 @@ switch ($requestUri) {
         }
         break;
 
-    case (preg_match('/\/bank_accounts\/(\d+)/', $requestUri, $matches) ? true : false): 
+    case (preg_match('/\/bank_accounts\/(\d+)/', $requestedPath, $matches) ? true : false): 
         $controller = new BankAccountController();
         $accountId = $matches[1];
 
