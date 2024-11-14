@@ -1,5 +1,9 @@
 <?php
 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE");
+header("Access-Control-Allow-Headers: Content-Type");
+
 require_once './vendor/autoload.php';
 
 use App\controllers\UserController;
@@ -56,6 +60,15 @@ switch ($requestedPath) {
             $controller->updateBankAccount($accountId);
         } elseif ($requestMethod == 'DELETE') {
             $controller->deleteBankAccount($accountId);
+        }
+        break;
+
+    case (preg_match('/\/bank_accounts\/(\d+)\/transaction/', $requestedPath, $matches) ? true : false): 
+        $controller = new BankAccountController();
+        $accountId = $matches[1];
+
+        if ($requestMethod == 'POST') {
+            $controller->addTransaction($accountId);
         }
         break;
 

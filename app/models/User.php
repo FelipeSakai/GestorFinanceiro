@@ -59,4 +59,12 @@ class User
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
+    public static function getAccounts($userId)
+    {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("SELECT id, nome, saldo FROM bank_accounts WHERE user_id = :user_id");
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

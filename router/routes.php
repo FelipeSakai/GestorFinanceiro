@@ -35,11 +35,12 @@ Route::add('GET', '/users/(\d+)', 'UserController@show');
 Route::add('PUT', '/users/(\d+)', 'UserController@update');
 Route::add('DELETE', '/users/(\d+)', 'UserController@delete');
 
-Route::add('POST', '/login', 'AuthController@login');
-
+Route::add('GET', '/accounts','BankAccountController@getAll');
 Route::add('POST', '/accounts', 'BankAccountController@store');
 Route::add('GET', '/accounts', 'BankAccountController@index');
 Route::add('GET', '/accounts/(\d+)', 'BankAccountController@show');
 Route::add('PUT', '/accounts/(\d+)', 'BankAccountController@update');
 Route::add('DELETE', '/accounts/(\d+)', 'BankAccountController@delete');
+Route::add('POST', '/accounts/(\d+)/transaction', 'BankAccountController@addTransaction');
+
 ?>
