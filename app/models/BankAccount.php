@@ -11,29 +11,35 @@ class BankAccount
     public $saldo;
     public $user_id;
 
-    public function __construct($nome = null, $saldo = 0.0, $user_id = null)
+    public function __construct($nome = null, $saldo = 0.0)
     {
         $this->nome = $nome;
         $this->saldo = $saldo;
-        $this->user_id = $user_id; 
     }
 
     public function save()
     {
         $db = Database::getConnection();
 
-        if ($this->id) {
-            $stmt = $db->prepare("UPDATE bank_accounts SET nome = :nome, saldo = :saldo, user_id = :user_id WHERE id = :id");
-            $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
-        } else {
-            $stmt = $db->prepare("INSERT INTO bank_accounts (nome, saldo, user_id) VALUES (:nome, :saldo, :user_id)");
-        }
-
+        $stmt = $db->prepare("INSERT INTO bank_accounts (nome, saldo) VALUES (:nome, :saldo)");
         $stmt->bindParam(':nome', $this->nome);
         $stmt->bindParam(':saldo', $this->saldo);
-        $stmt->bindParam(':user_id', $this->user_id);
+
         return $stmt->execute();
     }
+
+    public function update($id, $nome)
+    {
+        $db = Database::getConnection();
+
+        $stmt = $db->prepare("UPDATE bank_accounts SET nome = :nome WHERE id = :id");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        $stmt->bindParam(':nome', $nome);
+
+        return $stmt->execute();
+    }
+
 
     public function updateSaldo()
     {
@@ -49,8 +55,7 @@ class BankAccount
     {
         $db = Database::getConnection();
 
-        $stmt = $db->prepare("SELECT * FROM bank_accounts WHERE user_id = :user_id");
-        $stmt->bindParam(':user_id', $_SESSION['user_id'], PDO::PARAM_INT); 
+        $stmt = $db->prepare("SELECT * FROM bank_accounts");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -59,9 +64,8 @@ class BankAccount
     {
         $db = Database::getConnection();
 
-        $stmt = $db->prepare("SELECT * FROM bank_accounts WHERE id = :id AND user_id = :user_id");
+        $stmt = $db->prepare("SELECT * FROM bank_accounts WHERE id = :id");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -69,9 +73,8 @@ class BankAccount
     public static function delete($id)
     {
         $db = Database::getConnection();
-        $stmt = $db->prepare("DELETE FROM bank_accounts WHERE id = :id AND user_id = :user_id");
+        $stmt = $db->prepare("DELETE FROM bank_accounts WHERE id = :id");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);
         return $stmt->execute();
     }
 

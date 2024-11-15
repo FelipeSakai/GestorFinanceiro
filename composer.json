@@ -5,11 +5,19 @@
             "App\\": "app/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\":"tests/"
+        }
+    },
+
     "authors": [
         {
             "name": "Felipe",
             "email": "felipesakaiipolito@gmail.com"
         }
     ],
-    "require": {}
+    "require-dev": {
+        "phpunit/phpunit":"^11.4"
+    }
 }

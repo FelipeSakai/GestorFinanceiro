@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\BankAccount;
+use App\Models\Transaction;
 
 
 class BankAccountController
@@ -67,8 +68,41 @@ class BankAccountController
 {
     $data = json_decode(file_get_contents("php://input"), true);
 
-    if (!isset($data['nome']) && !isset($data['saldo'])) {
+    if (!isset($data['nome'])) {
         echo json_encode(['message' => 'Nome ou saldo são obrigatórios para atualização']);
+        http_response_code(400);
+        return;
+    }
+
+    $objectAccount = new BankAccount();
+
+    $account = $objectAccount->find($id);
+
+    if (!$account) {
+        echo json_encode(['message' => 'Conta bancária não encontrada']);
+        http_response_code(404);
+        return;
+    }
+    
+    if (isset($data['nome'])) {
+        $account['nome'] = $data['nome'];
+    }
+
+    if ( $objectAccount->update($id, $data['nome'])) {
+        echo json_encode(['message' => 'Conta bancária atualizada com sucesso', 'updated_account' => $account]);
+        http_response_code(200);
+    } else {
+        echo json_encode(['message' => 'Erro ao atualizar conta bancária']);
+        http_response_code(500);
+    }
+}
+
+
+public function addTransaction($id)
+{
+    $data = json_decode(file_get_contents("php://input"), true);
+    if (!isset($data['value']) || !is_numeric($data['value'])) {
+        echo json_encode(['message' => 'Valor da transação é obrigatório e deve ser numérico']);
         http_response_code(400);
         return;
     }
@@ -79,22 +113,42 @@ class BankAccountController
         http_response_code(404);
         return;
     }
-    if (isset($data['nome'])) {
-        $account->nome = $data['nome'];
-    }
-    if (isset($data['saldo'])) {
-        $account->saldo = $data['saldo'];
-    }
 
-    if ($account->update()) {
-        echo json_encode(['message' => 'Conta bancária atualizada com sucesso', 'updated_account' => $account]);
-        http_response_code(200);
+    error_log("Dados da transação: " . json_encode($data));
+
+    $transaction = new Transaction($id, $data['value']);
+    if ($transaction->save()) {
+        $account->saldo += $data['value'];
+
+        if ($account->updateSaldo()) {
+            echo json_encode(['message' => 'Transação registrada com sucesso', 'new_balance' => $account->saldo]);
+            http_response_code(200);
+        } else {
+            echo json_encode(['message' => 'Erro ao atualizar o saldo da conta']);
+            http_response_code(500);
+        }
     } else {
-        echo json_encode(['message' => 'Erro ao atualizar conta bancária']);
+        echo json_encode(['message' => 'Erro ao registrar transação']);
         http_response_code(500);
     }
 }
 
+
+public function getBankAccountAndTransaction($id)
+{
+    $account = BankAccount::find($id);
+
+    if ($account) {
+        echo json_encode($account);
+        http_response_code(200);
+    } else {
+        echo json_encode(['message' => 'Conta bancária não encontrada']);
+        http_response_code(404);
+    }
 }
+}
+
+
+
 
 

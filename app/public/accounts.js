@@ -1,5 +1,5 @@
 function showBankAccounts() {
-    fetch('http://localhost:80/GestorFinanceiro/index.php/bank_accounts')
+    fetch('http://localhost:8000/bank_accounts')
         .then(response => response.json())
         .then(accounts => {
             const accountList = document.getElementById('accountList');
@@ -9,7 +9,10 @@ function showBankAccounts() {
                 const accountDiv = document.createElement('div');
                 accountDiv.classList.add('account-item');
                 accountDiv.innerText = account.nome;
-                accountDiv.onclick = () => showAccountDetails(account.id);
+                accountDiv.onclick = () => {
+                    showAccountDetails(account.id);
+                    showTransactionDetails(accountId);
+                }
                 accountList.appendChild(accountDiv);
             });
         })
@@ -17,9 +20,10 @@ function showBankAccounts() {
 }
 
 function showAccountDetails(accountId) {
-    fetch(`http://localhost:80/GestorFinanceiro/index.php/bank_accounts/${accountId}/transactions`)
+    fetch(`http://localhost:8000/bank_accounts/${accountId}`)
         .then(response => response.json())
         .then(data => {
+            console.log(data)
             const displayArea = document.getElementById('displayArea');
             displayArea.innerHTML = `
                 <h3>Conta: ${data.nome}</h3>
@@ -30,20 +34,28 @@ function showAccountDetails(accountId) {
                     <h4>Histórico de Transações</h4>
                 </div>
             `;
+        })
+        .catch(error => console.error('Erro ao carregar detalhes da conta:', error));
+}
 
+function showTransactionDetails(accountId) {
+    fetch(`http://localhost:8000/bank_accounts/transaction${accountId}`)
+        .then(response => response.json())
+        .then(data => {
             const transactionHistory = document.getElementById('transactionHistory');
-            data.transactions.forEach(transaction => {
+            data.forEach(transaction => {
                 const transactionDiv = document.createElement('div');
                 transactionDiv.classList.add('transaction-item');
                 transactionDiv.classList.add(transaction.value > 0 ? 'positive' : 'negative');
                 transactionDiv.innerHTML = `
-                    <span>${transaction.date}</span>
-                    <span>${transaction.value > 0 ? '+' : ''}${transaction.value}</span>
-                `;
+                <span>${transaction.date}</span>
+                <span>${transaction.value > 0 ? '+' : ''}${transaction.value}</span>
+            `;
                 transactionHistory.appendChild(transactionDiv);
             });
         })
         .catch(error => console.error('Erro ao carregar detalhes da conta:', error));
+
 }
 
 function addTransaction(accountId, isAddition) {
@@ -57,15 +69,15 @@ function addTransaction(accountId, isAddition) {
         preConfirm: (value) => {
             const transactionValue = isAddition ? parseFloat(value) : -parseFloat(value);
 
-            return fetch(`http://localhost:80/GestorFinanceiro/index.php/bank_accounts/${accountId}/transaction`, {
+            return fetch(`http://localhost:8000/bank_accounts/transaction/${accountId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ value: transactionValue })
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Erro ao processar transação');
-                return response.json();
-            });
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao processar transação');
+                    return response.json();
+                });
         },
     }).then((result) => {
         if (result.isConfirmed) {
@@ -94,23 +106,23 @@ function openRegisterForm() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch('http://localhost:80/GestorFinanceiro/index.php/bank_accounts', {
+            fetch('http://localhost:8000/bank_accounts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(result.value)
             })
-            .then(response => response.json())
-            .then(data => {
-                Swal.fire('Conta cadastrada!', '', 'success');
-                showBankAccounts();
-            })
-            .catch(error => Swal.fire('Erro ao cadastrar conta', '', 'error'));
+                .then(response => response.json())
+                .then(data => {
+                    Swal.fire('Conta cadastrada!', '', 'success');
+                    showBankAccounts();
+                })
+                .catch(error => Swal.fire('Erro ao cadastrar conta', '', 'error'));
         }
     });
 }
 
 function showBankAccounts() {
-    fetch('http://localhost:80/GestorFinanceiro/index.php/bank_accounts')
+    fetch('http://localhost:8000/bank_accounts')
         .then(response => response.json())
         .then(accounts => {
             const accountList = document.getElementById('accountList');
@@ -149,15 +161,15 @@ function editAccount(accountId, currentName) {
             if (!newName) {
                 Swal.showValidationMessage('O nome não pode estar vazio');
             } else {
-                return fetch(`http://localhost:80/GestorFinanceiro/index.php/bank_accounts/${accountId}`, {
+                return fetch(`http://localhost:8000/bank_accounts/${accountId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome: newName })
                 })
-                .then(response => {
-                    if (!response.ok) throw new Error('Erro ao editar conta');
-                    return response.json();
-                });
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erro ao editar conta');
+                        return response.json();
+                    });
             }
         }
     }).then((result) => {
@@ -178,19 +190,19 @@ function removeAccount(accountId) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch(`http://localhost:80/GestorFinanceiro/index.php/bank_accounts/${accountId}`, {
+            fetch(`http://localhost:8000/bank_accounts/${accountId}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' }
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Erro ao remover conta');
-                return response.json();
-            })
-            .then(() => {
-                Swal.fire('Conta removida!', '', 'success');
-                showBankAccounts();
-            })
-            .catch(error => Swal.fire('Erro ao remover conta', '', 'error'));
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao remover conta');
+                    return response.json();
+                })
+                .then(() => {
+                    Swal.fire('Conta removida!', '', 'success');
+                    showBankAccounts();
+                })
+                .catch(error => Swal.fire('Erro ao remover conta', '', 'error'));
         }
     });
 }
@@ -200,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showBankAccounts() {
-    fetch('http://localhost:80/GestorFinanceiro/index.php/bank_accounts')
+    fetch('http://localhost:8000/bank_accounts')
         .then(response => response.json())
         .then(accounts => {
             const accountList = document.getElementById('accountList');

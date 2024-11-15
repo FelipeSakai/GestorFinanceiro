@@ -1,22 +1,27 @@
 <?php
 
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE");
-header("Access-Control-Allow-Headers: Content-Type");
-
+header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+// header("Access-Control-Allow-Credentials: true");
 require_once './vendor/autoload.php';
+
+http_response_code(200);
 
 use App\controllers\UserController;
 use App\controllers\BankAccountController;
+use App\controllers\TransactionController;
 
 $requestedPath = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
-$pathItems = explode("/", $requestedPath);
+$pathItems = array_filter(explode("/", $requestedPath)); // Remove elementos vazios
 
-$requestedPath = "/" . ($pathItems[3] ?? '') . (!empty($pathItems[4]) ? "/" . $pathItems[4] : "");
+// Reconstrói o caminho sem pressupor a posição
+$requestedPath = "/" . ($pathItems[1] ?? '') . (!empty($pathItems[2]) ? "/" . $pathItems[2] : "");
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 
+
 switch ($requestedPath) {
-   
+
     case '/users':
         $controller = new UserController();
 
@@ -27,7 +32,7 @@ switch ($requestedPath) {
         }
         break;
 
-    case (preg_match('/\/users\/(\d+)/', $requestedPath, $matches) ? true : false): 
+    case (preg_match('/\/users\/(\d+)/', $requestedPath, $matches) ? true : false):
         $controller = new UserController();
         $userId = $matches[1];
 
@@ -50,10 +55,19 @@ switch ($requestedPath) {
         }
         break;
 
-    case (preg_match('/\/bank_accounts\/(\d+)/', $requestedPath, $matches) ? true : false): 
+    case '/bank_accounts/transaction':
+        $controller = new BankAccountController();
+
+        if ($requestMethod == 'GET') {
+            $controller->getAll();
+        } elseif ($requestMethod == 'POST') {
+            $controller->createBankAccount();
+        }
+        break;
+
+    case (preg_match('/\/bank_accounts\/(\d+)/', $requestedPath, $matches) ? true : false):
         $controller = new BankAccountController();
         $accountId = $matches[1];
-
         if ($requestMethod == 'GET') {
             $controller->getBankAccountById($accountId);
         } elseif ($requestMethod == 'PUT') {
@@ -62,13 +76,14 @@ switch ($requestedPath) {
             $controller->deleteBankAccount($accountId);
         }
         break;
-
-    case (preg_match('/\/bank_accounts\/(\d+)\/transaction/', $requestedPath, $matches) ? true : false): 
-        $controller = new BankAccountController();
+    case (preg_match('/\/bank_accounts\/\/transaction\/(\d+)$/', $requestedPath, $matches) ? true : false):
+        $controller = new TransactionController();
         $accountId = $matches[1];
 
         if ($requestMethod == 'POST') {
-            $controller->addTransaction($accountId);
+            $controller->createTransaction($accountId);
+        } else if ($requestMethod == 'GET') {
+            $controller->getByAccountId($accountId);
         }
         break;
 
